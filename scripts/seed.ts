@@ -1,47 +1,8 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { sql } from "@vercel/postgres";
+import { drizzle } from "drizzle-orm/vercel-postgres";
 import { products } from "../lib/schema";
-import path from "path";
 
-const DB_PATH = path.join(process.cwd(), "brewhaus.db");
-
-const client = createClient({ url: `file:${DB_PATH}` });
-const db = drizzle(client);
-
-// Init tables first
-await client.execute(`PRAGMA journal_mode = WAL`);
-await client.execute(`PRAGMA foreign_keys = ON`);
-await client.execute(`
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT NOT NULL,
-    price REAL NOT NULL,
-    category TEXT NOT NULL,
-    image_url TEXT NOT NULL,
-    in_stock INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
-await client.execute(`
-  CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    customer_name TEXT NOT NULL,
-    customer_email TEXT NOT NULL,
-    total REAL NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
-await client.execute(`
-  CREATE TABLE IF NOT EXISTS order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_id INTEGER NOT NULL,
-    product_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
-    price_at_time REAL NOT NULL
-  )
-`);
+const db = drizzle(sql);
 
 const seedProducts = [
   {
@@ -135,9 +96,6 @@ if (existing.length > 0) {
 
 console.log("Seeding database...");
 for (const product of seedProducts) {
-  await db.insert(products).values({
-    ...product,
-    createdAt: new Date().toISOString(),
-  });
+  await db.insert(products).values(product);
 }
 console.log(`Seeded ${seedProducts.length} products successfully!`);

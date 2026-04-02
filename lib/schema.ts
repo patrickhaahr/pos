@@ -1,29 +1,38 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import {
+  pgTable,
+  text,
+  integer,
+  real,
+  boolean,
+  timestamp,
+  serial,
+} from "drizzle-orm/pg-core";
 
-export const products = sqliteTable("products", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
   price: real("price").notNull(),
-  category: text("category", { enum: ["drink", "snack"] }).notNull(),
+  category: text("category").$type<"drink" | "snack">().notNull(),
   imageUrl: text("image_url").notNull(),
-  inStock: integer("in_stock", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  inStock: boolean("in_stock").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const orders = sqliteTable("orders", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   total: real("total").notNull(),
-  status: text("status", { enum: ["pending", "completed", "cancelled"] })
+  status: text("status")
+    .$type<"pending" | "completed" | "cancelled">()
     .notNull()
     .default("pending"),
-  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const orderItems = sqliteTable("order_items", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
   orderId: integer("order_id")
     .notNull()
     .references(() => orders.id),

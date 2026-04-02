@@ -30,7 +30,6 @@ export async function createOrder(
       customerEmail,
       total,
       status: "pending",
-      createdAt: new Date().toISOString(),
     })
     .returning();
 

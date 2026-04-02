@@ -23,10 +23,7 @@ export async function createProduct(data: Omit<NewProduct, "id" | "createdAt">) 
   const session = await requireAdmin();
   if (!session) return { error: "Unauthorized" };
 
-  await db.insert(products).values({
-    ...data,
-    createdAt: new Date().toISOString(),
-  });
+  await db.insert(products).values(data);
   revalidatePath("/");
   revalidatePath("/admin/products");
   return { success: true };
